@@ -30,7 +30,11 @@ class TransactionControllerImpl(val transactionService: TransactionService,
     override fun saveTransaction(@RequestBody requestedTransaction: TransactionRequest, principal: Principal): Transaction {
 
         userService.usersExist(requestedTransaction.split.userAmountsList.map { it.userId })
-        if (!requestedTransaction.split.userAmountsList.map { it.userId }.contains(principal.name)) {
+        if (!requestedTransaction
+                        .split
+                        .userAmountsList
+                        .map { it.userId }
+                        .contains(principal.name)) {
             throw NotTransactionPartyException("The user adding a transaction must be party to it: ${principal.name}")
         }
         val transactionToSave = Transaction(
@@ -95,12 +99,6 @@ class TransactionControllerImpl(val transactionService: TransactionService,
         dueService.deleteByTransactionId(id)
         transactionService.deleteByPublicId(id)
         return ResponseEntity.ok().build<Void>()
-    }
-
-    @GetMapping("/test2")
-    fun getUsers(): String {
-        //return dueService.getAllByDebtorId("0b1e8311-e16b-4c5e-87e3-7eca38a0727b")
-        return "dupa"
     }
 
 

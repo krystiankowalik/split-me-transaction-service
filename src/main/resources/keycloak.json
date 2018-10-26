@@ -1,8 +1,0 @@
-{
-  "realm": "test",
-  "auth-server-url": "http://192.168.43.154:8080/auth",
-  "ssl-required": "external",
-  "resource": "test-app",
-  "public-client": true
-
-}

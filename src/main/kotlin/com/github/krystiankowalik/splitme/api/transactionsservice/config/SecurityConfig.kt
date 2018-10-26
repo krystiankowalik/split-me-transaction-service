@@ -1,7 +1,8 @@
 package com.github.krystiankowalik.splitme.api.transactionsservice.config
 
+import org.keycloak.adapters.KeycloakConfigResolver
+import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration
-import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
@@ -15,30 +16,43 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 
 @KeycloakConfiguration
 class SecurityConfig : KeycloakWebSecurityConfigurerAdapter() {
+
+
     /**
      * Registers the KeycloakAuthenticationProvider with the authentication manager.
      */
     @Autowired
     @Throws(Exception::class)
     fun configureGlobal(auth: AuthenticationManagerBuilder) {
-        val keycloakAuthenticationProvider = KeycloakAuthenticationProvider()
+        val keycloakAuthenticationProvider = keycloakAuthenticationProvider()
+
+        // adding proper authority mapper for prefixing role with "ROLE_"
         keycloakAuthenticationProvider.setGrantedAuthoritiesMapper(SimpleAuthorityMapper())
+
         auth.authenticationProvider(keycloakAuthenticationProvider)
     }
 
     /**
-     * Defines the session authentication strategy.
+     * Provide a session authentication strategy bean which should be of type
+     * RegisterSessionAuthenticationStrategy for public or confidential applications
+     * and NullAuthenticatedSessionStrategy for bearer-only applications.
      */
     @Bean
     override fun sessionAuthenticationStrategy(): SessionAuthenticationStrategy {
         return RegisterSessionAuthenticationStrategy(SessionRegistryImpl())
     }
 
-    /*@Bean
-    public KeycloakConfigResolver keycloakConfigResolver(){
-        return new KeycloakSpringBootConfigResolver();
-    }*/
+    /**
+     * Use properties in application.properties instead of keycloak.json
+     */
+    @Bean
+    fun KeycloakConfigResolver(): KeycloakConfigResolver {
+        return KeycloakSpringBootConfigResolver()
+    }
 
+    /**
+     * Secure appropriate endpoints
+     */
     @Throws(Exception::class)
     override fun configure(http: HttpSecurity) {
         super.configure(http)
@@ -47,12 +61,12 @@ class SecurityConfig : KeycloakWebSecurityConfigurerAdapter() {
 //                .antMatchers("/transactions/test2/**").permitAll()
 //                .anyRequest().permitAll()
 
-                .antMatchers("/dues**").hasRole("admin")
+                .antMatchers("/dues*").hasRole("admin")
                 .antMatchers("/dues/**").hasRole("admin")
-                .antMatchers("/transactions**").hasRole("admin")
+                .antMatchers("/transactions*").hasRole("admin")
                 .antMatchers("/transactions/**").hasRole("admin")
-                .antMatchers("/me**").hasRole("user")
-                .anyRequest().permitAll()
+                .antMatchers("/me*").hasRole("user")
+                .antMatchers("/me/**").hasRole("user")
 
 
     }
@@ -62,3 +76,4 @@ class SecurityConfig : KeycloakWebSecurityConfigurerAdapter() {
         web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources", "/configuration/security", "/swagger-ui.html", "/webjars/**")
     }
 }
+
