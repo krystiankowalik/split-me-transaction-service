@@ -1,9 +1,11 @@
 package com.github.krystiankowalik.splitme.api.transactionsservice.io
 
 import com.github.krystiankowalik.splitme.api.transactionsservice.model.due.Due
-import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 
-interface DueRepository : MongoRepository<Due, String> {
+@Repository
+interface DueRepository : JpaRepository<Due, String> {
 
     fun findAllByDebtorId(id:String):List<Due>
     fun findAllByCreditorId(id:String):List<Due>

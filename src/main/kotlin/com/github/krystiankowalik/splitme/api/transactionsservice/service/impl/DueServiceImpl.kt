@@ -9,6 +9,7 @@ import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 
 @Service
+
 class DueServiceImpl(val transactionRepository: TransactionRepository,
                      val dueRepository: DueRepository) : DueService {
 

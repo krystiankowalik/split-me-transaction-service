@@ -3,7 +3,6 @@ package com.github.krystiankowalik.splitme.api.transactionsservice.controller.im
 import com.github.krystiankowalik.splitme.api.transactionsservice.controller.TransactionController
 import com.github.krystiankowalik.splitme.api.transactionsservice.exception.NotTransactionPartyException
 import com.github.krystiankowalik.splitme.api.transactionsservice.exception.TransactionModificationException
-import com.github.krystiankowalik.splitme.api.transactionsservice.model.money.Money
 import com.github.krystiankowalik.splitme.api.transactionsservice.model.transaction.Transaction
 import com.github.krystiankowalik.splitme.api.transactionsservice.model.transaction.TransactionRequest
 import com.github.krystiankowalik.splitme.api.transactionsservice.service.DueService
@@ -14,7 +13,6 @@ import com.github.krystiankowalik.splitme.api.transactionsservice.util.generateR
 import com.github.krystiankowalik.splitme.api.transactionsservice.util.getCurrentTime
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -40,12 +38,8 @@ class TransactionControllerImpl(val transactionService: TransactionService,
         val transactionToSave = Transaction(
                 id = generateRandomId(),
                 publicId = generateRandomId(),
-                date = requestedTransaction.date,
+                transactionDate = requestedTransaction.date,
                 description = requestedTransaction.description,
-                money = Money(
-                        amount = requestedTransaction.split.totalAmount,
-                        currency = requestedTransaction.split.splitCurrency
-                ),
                 type = requestedTransaction.split.transactionType,
                 split = requestedTransaction.split,
                 added = getCurrentTime(),
@@ -70,12 +64,8 @@ class TransactionControllerImpl(val transactionService: TransactionService,
         val transactionToSave = Transaction(
                 id = oldTransaction.id,
                 publicId = oldTransaction.publicId,
-                date = requestedTransaction.date,
+                transactionDate = requestedTransaction.date,
                 description = requestedTransaction.description,
-                money = Money(
-                        amount = requestedTransaction.split.totalAmount,
-                        currency = requestedTransaction.split.splitCurrency
-                ),
                 type = requestedTransaction.split.transactionType,
                 split = requestedTransaction.split,
                 added = oldTransaction.added,

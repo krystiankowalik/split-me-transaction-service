@@ -1,7 +1,7 @@
 buildscript {
     ext {
-        kotlinVersion = '1.2.61'
-        springBootVersion = '2.0.0.RELEASE'
+        kotlinVersion = '1.2.71'
+        springBootVersion = '2.1.2.RELEASE'
         keycloakVersion = '4.4.0.Final'
     }
     repositories {
@@ -24,7 +24,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'war'
 
 
-group = 'com.krystiankowalik.debtmanager'
+group = 'com.krystiankowalik.splitme'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
 compileKotlin {
@@ -48,12 +48,14 @@ repositories {
 
 
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter-data-mongodb')
-    compile('org.springframework.boot:spring-boot-starter-security')
-    compile('org.springframework.boot:spring-boot-starter-web')
-    compile('com.fasterxml.jackson.module:jackson-module-kotlin')
-    compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    compile("org.jetbrains.kotlin:kotlin-reflect")
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+//    compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+    implementation('org.springframework.boot:spring-boot-starter-security')
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('com.fasterxml.jackson.module:jackson-module-kotlin')
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    runtimeOnly 'mysql:mysql-connector-java'
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 
     compile "org.keycloak:keycloak-spring-boot-starter:${keycloakVersion}"

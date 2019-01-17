@@ -23,7 +23,7 @@ class DueControllerImpl(val dueService: DueService) : DueController {
     override fun toggleSettled(@PathVariable id: String, @RequestParam settled: Boolean): ResponseEntity<Due> {
         val found = dueService.getByPublicId(id)
 
-        val new = Due(found.id, found.publicId, found.debtorId, found.creditorId, found.money, settled, found.transactionId)
+        val new = Due(found.dueId, found.publicId, found.debtorId, found.creditorId, found.amount, found.currencyCode, settled, found.transactionId)
         dueService.save(new)
         return ResponseEntity(dueService.getByPublicId(new.publicId), HttpStatus.OK)
     }

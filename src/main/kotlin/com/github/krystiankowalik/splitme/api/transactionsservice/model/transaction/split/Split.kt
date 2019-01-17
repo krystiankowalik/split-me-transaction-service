@@ -2,28 +2,41 @@ package com.github.krystiankowalik.splitme.api.transactionsservice.model.transac
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.github.krystiankowalik.splitme.api.transactionsservice.model.due.Due
-import com.github.krystiankowalik.splitme.api.transactionsservice.model.money.Currency
-import com.github.krystiankowalik.splitme.api.transactionsservice.model.money.Money
 import com.github.krystiankowalik.splitme.api.transactionsservice.model.transaction.Transaction
 import com.github.krystiankowalik.splitme.api.transactionsservice.util.generateRandomId
+import java.io.Serializable
 import java.math.BigDecimal
+import javax.persistence.*
 
-data class Split(val userAmountsList: List<UserAmounts>,
-                 val splitCurrency: Currency) {
+@Entity
+@Table(name = "split")
+data class Split(@Id
+                 @Column(name = "split_id")
+                 val split_id: String="",
+                 @OneToMany
+                 @JoinColumn(name = "split_id", referencedColumnName = "split_id")
+                 val userAmountsList: List<UserAmounts> = arrayListOf(),
+                 @Column(name = "currency")
+                 val currency: String="") : Serializable {
+
+    @Transient
+    private fun getUserAmountsMap() = userAmountsList.map { it.userId to it }.toMap()
+
+    @Transient
+    fun getTotalAmount() = getUserAmountsMap().map { it.value.exchanged }.fold(BigDecimal.ZERO, BigDecimal::add).roundWithContext()
+
+
 
     @JsonIgnore
-    private val userAmountsMap = userAmountsList.map { it.userId to it }.toMap()
+    @Transient
+    private val totalShare = getUserAmountsMap().map { it.value.share }.fold(BigDecimal.ZERO, BigDecimal::add).roundWithContext()
 
     @JsonIgnore
-    val totalAmount = userAmountsMap.map { it.value.exchanged }.fold(BigDecimal.ZERO, BigDecimal::add).roundWithContext()
+    @Transient
+    private val isIncome = getTotalAmount()> BigDecimal.ZERO
 
     @JsonIgnore
-    private val totalShare = userAmountsMap.map { it.value.share }.fold(BigDecimal.ZERO, BigDecimal::add).roundWithContext()
-
-    @JsonIgnore
-    private val isIncome = totalAmount > BigDecimal.ZERO
-
-    @JsonIgnore
+    @Transient
     val transactionType = if (isIncome) Transaction.Type.INCOME else Transaction.Type.EXPENSE
 
     @JsonIgnore
@@ -38,7 +51,7 @@ data class Split(val userAmountsList: List<UserAmounts>,
 
     @JsonIgnore
     private fun UserAmounts.getUserShareAsAmount(): BigDecimal =
-            (this.getUserShareRatio().multiply(totalAmount)).adjustSign()
+            (this.getUserShareRatio().multiply(getTotalAmount())).adjustSign()
 
     @JsonIgnore
     private fun UserAmounts.getUserDueTotalAmount(): BigDecimal {
@@ -55,8 +68,10 @@ data class Split(val userAmountsList: List<UserAmounts>,
                     .roundWithContext()
 
     @JsonIgnore
+    @Transient
     val creditors = userAmountsList.filter { it.getUserDueTotalAmount() < BigDecimal.ZERO }
     @JsonIgnore
+    @Transient
     val debtors = userAmountsList.filter { it.getUserDueTotalAmount() >= BigDecimal.ZERO }
 
     @JsonIgnore
@@ -64,16 +79,16 @@ data class Split(val userAmountsList: List<UserAmounts>,
         val dues = mutableListOf<Due>()
         debtors.forEach { debtor ->
             creditors.forEach { creditor ->
-                dues.add(Due(id = generateRandomId(),
+                dues.add(Due(dueId = generateRandomId(),
                         publicId = generateRandomId(),
                         debtorId = debtor.userId,
                         creditorId = creditor.userId,
-                        money = Money(amount = debtor
+                        amount = debtor
                                 .getUserDueTotalAmount()
                                 .multiply(creditor
                                         .getUserDueTotalAmount()
                                         .divideWithScale(getTotalOverpaid()).abs()).roundWithContext(),
-                                currency = splitCurrency),
+                        currencyCode = this.currency,
                         settled = false,
                         transactionId = transactionId))
             }
@@ -81,22 +96,22 @@ data class Split(val userAmountsList: List<UserAmounts>,
         creditors.forEach { debtor ->
             creditors.forEach { creditor ->
                 if (debtor != creditor) {
-                    dues.add(Due(id = generateRandomId(),
+                    dues.add(Due(dueId = generateRandomId(),
                             publicId = generateRandomId(),
                             debtorId = debtor.userId,
                             creditorId = creditor.userId,
-                            money = Money(amount = debtor
+                            amount = debtor
                                     .getUserDueTotalAmount()
                                     .multiply(creditor
                                             .getUserDueTotalAmount()
                                             .divideWithScale(getTotalOverpaid()).abs()).roundWithContext(),
-                                    currency = splitCurrency),
+                            currencyCode = currency,
                             settled = false,
                             transactionId = transactionId))
                 }
             }
         }
-        return dues.filter { it.money.amount > BigDecimal.ZERO && it.money.amount.abs() > BigDecimal("0.001") }
+        return dues.filter { it.amount > BigDecimal.ZERO && it.amount.abs() > BigDecimal("0.001") }
     }
 
     private fun BigDecimal.divideWithScale(other: BigDecimal): BigDecimal = this.divide(other, 30, java.math.RoundingMode.FLOOR)

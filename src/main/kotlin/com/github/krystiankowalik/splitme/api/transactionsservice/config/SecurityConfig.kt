@@ -58,9 +58,6 @@ class SecurityConfig : KeycloakWebSecurityConfigurerAdapter() {
         super.configure(http)
         http.csrf().disable()
                 .authorizeRequests()
-//                .antMatchers("/transactions/test2/**").permitAll()
-//                .anyRequest().permitAll()
-
                 .antMatchers("/dues*").hasRole("admin")
                 .antMatchers("/dues/**").hasRole("admin")
                 .antMatchers("/transactions*").hasRole("admin")
